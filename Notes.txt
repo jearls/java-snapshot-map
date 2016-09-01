@@ -1,0 +1,31 @@
+public interface Snapshotable {
+    public Snapshot takeSnapshot();
+    public void releaseSnapshot(Snapshot snapshot);
+    public void rollbackSnapshot(Snapshot snapshot) throws RollbackFailedException;
+}
+
+public interface Snapshot {
+    public Snapshotable getView();
+}
+
+
+An application can take a snapshot of a map (or maybe, eventually, any
+type of collection).  The snapshot includes an unmodifiable view of the
+collection at the time the snapshot was taken, and a method to release
+the snapshot.
+
+A simple example - removing values from a map without using the remove()
+iterator method.  Take a snapshot, and run your iterator over that
+snapshot.  Remove the values from the real map, then release the
+snapshot when you're done.
+
+public void removeAllOddKeys(SnapshotableMap<Integer,?> map) {
+    Snapshot snapshot = map.takeSnapshot();
+    SnapshotableMap<Integer,?> frozenMap = (SnapshotableMap<Integer,?>)snapshot.getView();
+    for (Integer key : frozenMap.keyset()) {
+        if (key.intValue() % 2 == 1) {
+            map.remove(key);
+        }
+    }
+    map.releaseSnapshot(frozenMap); 
+}
